@@ -18,7 +18,6 @@ stones_img = [pygame.image.load(f"rock{i}.png") for i in range(0, 3)]
 stones_img = [pygame.transform.scale(elem, (50, 50)) for elem in stones_img]
 clock = pygame.time.Clock()
 
-
 class Rocket(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
@@ -84,9 +83,45 @@ for i in range(5):
     Stone(choice(stones_img), stones)
 
 
+def baze(score):
+  score = int(score)
+  con = sqlite3.connect('score.sqlite') 
+ 
+  cur = con.cursor() 
+  que_create = ''' 
+  CREATE TABLE IF NOT EXISTS scores ( 
+      id INTEGER PRIMARY KEY, 
+      count INTEGER 
+  ) 
+  ''' 
+  cur.execute(que_create) 
+  con.commit() 
+   
+   
+  que_insert = ''' 
+  INSERT INTO score (count) VALUES 
+      ({}) 
+  ''' 
+  cur.execute(que_insert.format(score)) 
+  con.commit() 
+   
+   
+  cur = con.cursor() 
+  q = ''' SELECT * FROM score 
+          ORDER BY count DESC 
+          LIMIT 5  
+  ''' 
+  cur.execute(q) 
+  res = cur.fetchall() 
+  print(res) 
+  con.commit() 
+   
+  con.close()
+
 def collision():
     if pygame.sprite.groupcollide(stones, player_group, True, True):
         print(f"Ваш счет: {int(score)}")
+        baze(score)
         exit()
 
 
@@ -102,7 +137,7 @@ def move_and_draw_all_sprites():
     stones.update()
 
 
-score = 0
+
 
 
 def score_and_background():
@@ -116,36 +151,7 @@ def score_and_background():
     win.blit(score_text, (W // 2, H // 2))
 
 
-con = sqlite3.connect('score.sqlite')
-
-cur = con.cursor()
-que_create = ''' 
-CREATE TABLE IF NOT EXISTS score ( 
-    id INTEGER PRIMARY KEY, 
-    count INTEGER 
-) 
-'''
-cur.execute(que_create)
-con.commit()
-
-que_insert = ''' 
-INSERT INTO score (count) VALUES 
-    ({}) 
-'''
-cur.execute(que_insert.format(score))
-con.commit()
-
-cur = con.cursor()
-q = ''' SELECT * FROM score 
-        ORDER BY count DESC 
-        LIMIT 5  
-'''
-cur.execute(q)
-res = cur.fetchall()
-print(res)
-con.commit()
-
-con.close()
+score = 0
 
 while True:
     for event in pygame.event.get():
